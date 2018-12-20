@@ -18,8 +18,10 @@ class CampusViewController: UIViewController {
     var campus = Campus(filename: "Campus")
     var selectedOptions : [MapOptionsType] = []
     let locationManager = CLLocationManager()
-    var destination = MKMapItem(placemark: MKPlacemark(coordinate: CLLocationCoordinate2D(latitude: 32.111045, longitude: 118.962997)))
+    var destination: MKMapItem?
     var userLocation: CLLocation?
+    var desannotation: POIAnnotation?
+    var userannotation: POIAnnotation?
     
     
     override func viewDidLoad() {
@@ -100,7 +102,8 @@ class CampusViewController: UIViewController {
     
     func getDirections() {
         let request = MKDirections.Request()
-        request.source = MKMapItem.forCurrentLocation()
+        //request.source = MKMapItem.forCurrentLocation()
+        request.source = MKMapItem(placemark: MKPlacemark(coordinate:userLocation!.coordinate))
         request.destination = destination
         request.requestsAlternateRoutes = false
         let directions = MKDirections(request: request)
@@ -131,15 +134,21 @@ class CampusViewController: UIViewController {
     override func touchesEnded(_ touches: Set<UITouch>, with event: UIEvent?) {
         let overlays = mapView.overlays
         mapView.removeOverlays(overlays)
+        if(desannotation != nil)
+        {
+            mapView.removeAnnotation(desannotation!)
+        }
         //    1、获取在控件上点击的点
         let point = touches.first?.location(in: mapView)
         //    2、将控件上面的点(CGPoint),转为经纬度
         let coordinate = mapView.convert(point!, toCoordinateFrom: mapView)
         //    3、创建大头针数据模型,并添加到地图上：注：必须先设置title和subTitle的占位字
-        let annotation = MKPointAnnotation()
-        annotation.coordinate = coordinate
-        annotation.title = "nanjing"
-        mapView.addAnnotation(annotation)
+        desannotation = POIAnnotation(coordinate: coordinate, title: "String", subtitle: "String", type: POIType(rawValue: 0)!)
+        print(coordinate.latitude)
+        print(coordinate.longitude)
+        mapView.addAnnotation(desannotation!)
+        // Do any additional setup after loading the view.
+        
         //_ = addAnnotation(coordinate: coordinate, title: "城市", subTitle: "地址")
         destination = MKMapItem(placemark: MKPlacemark(coordinate:coordinate))
         getDirections()
@@ -227,6 +236,8 @@ extension CampusViewController : CLLocationManagerDelegate {
     
     func locationManager(_ manager: CLLocationManager, didUpdateLocations locations: [CLLocation]) {
         userLocation = locations[0]
+        userannotation = POIAnnotation(coordinate: userLocation!.coordinate, title: "String", subtitle: "String", type: POIType(rawValue: 0)!)
+        mapView.addAnnotation(userannotation!)
         self.getDirections()
         let circle = MKCircle(center: (userLocation?.coordinate)!, radius: 10000)
         mapView.addOverlay(circle)
